@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>QU!ZZ</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body {
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
+
+.box {
+  background:rgba(255,255,255,0.06);
+  padding:25px;
+  border-radius:20px;
+  width:340px;
+  text-align:center;
+}
+
+input, button {
+  width:90%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:10px;
+  border:none;
+}
+
+button {
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.green { background:#22c55e; }
+.blue { background:#38bdf8; }
+
+#qr {
+  display:flex;
+  justify-content:center;
+  margin-top:15px;
+}
+
+.pin {
+  font-size:40px;
+  margin:10px 0;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+  <h2>QU!ZZ</h2>
+
+  <input id="user" placeholder="Nazwa">
+  <input id="pass" type="password" placeholder="Hasło">
+
+  <button class="green" onclick="login()">Zaloguj</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="box" id="dashboardBox" style="display:none;">
+  <h2>Panel</h2>
+
+  <p id="welcome"></p>
+
+  <button class="green" onclick="createLobby()">Utwórz lobby</button>
+  <button onclick="logout()">Wyloguj</button>
+</div>
+
+<!-- LOBBY -->
+<div class="box" id="lobbyBox" style="display:none;">
+  <h2>🎮 LOBBY</h2>
+
+  <div class="pin" id="pin"></div>
+
+  <div id="qr"></div>
+
+  <p id="link"></p>
+
+  <button onclick="back()">Powrót</button>
+</div>
+
+<script>
+
+let currentUser = null;
+
+// ===== LOGIN (BEZ AUTO LOGOWANIA) =====
+function login() {
+  const u = document.getElementById("user").value;
+  const p = document.getElementById("pass").value;
+
+  if (!u || !p) {
+    alert("Uzupełnij dane");
+    return;
+  }
+
+  currentUser = u;
+
+  showDashboard();
+}
+
+// ===== DASHBOARD =====
+function showDashboard() {
+  loginBox.style.display = "none";
+  lobbyBox.style.display = "none";
+  dashboardBox.style.display = "block";
+
+  document.getElementById("welcome").innerText =
+    "Zalogowany jako: " + currentUser;
+}
+
+// ===== LOBBY =====
+function createLobby() {
+  const pin = Math.floor(1000 + Math.random()*9000);
+
+  openLobby(pin);
+}
+
+function openLobby(pin) {
+  dashboardBox.style.display = "none";
+  loginBox.style.display = "none";
+  lobbyBox.style.display = "block";
+
+  document.getElementById("pin").innerText = pin;
+
+  const url = window.location.href.split("?")[0] + "?join=" + pin;
+
+  document.getElementById("link").innerText = url;
+
+  document.getElementById("qr").innerHTML = "";
+
+  new QRCode(document.getElementById("qr"), {
+    text: url,
+    width: 180,
+    height: 180
+  });
+}
+
+// ===== BACK =====
+function back() {
+  showDashboard();
+}
+
+// ===== LOGOUT =====
+function logout() {
+  currentUser = null;
+  loginBox.style.display = "block";
+  dashboardBox.style.display = "none";
+  lobbyBox.style.display = "none";
+}
+
+// ===== QR JOIN =====
+const params = new URLSearchParams(window.location.search);
+const join = params.get("join");
+
+if (join) {
+  alert("Dołączanie do lobby: " + join);
+
+  loginBox.style.display = "none";
+  dashboardBox.style.display = "none";
+  lobbyBox.style.display = "block";
+
+  document.getElementById("pin").innerText = join;
+
+  document.getElementById("link").innerText =
+    window.location.href;
+
+  document.getElementById("qr").innerHTML = "";
+
+  new QRCode(document.getElementById("qr"), {
+    text: window.location.href,
+    width: 180,
+    height: 180
+  });
+}
+
+</script>
+
+</body>
+</html>

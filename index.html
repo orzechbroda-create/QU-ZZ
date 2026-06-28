@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>QU!ZZ</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <style>
 body {
   margin:0;
@@ -22,7 +20,7 @@ body {
   background:rgba(255,255,255,0.06);
   padding:25px;
   border-radius:20px;
-  width:340px;
+  width:360px;
   text-align:center;
 }
 
@@ -41,16 +39,33 @@ button {
 
 .green { background:#22c55e; }
 .blue { background:#38bdf8; }
+.purple { background:#a855f7; }
 
-#qr {
+.menu {
   display:flex;
-  justify-content:center;
+  flex-direction:column;
+  gap:12px;
   margin-top:15px;
 }
 
-.pin {
-  font-size:40px;
-  margin:10px 0;
+.option {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+  background:rgba(255,255,255,0.08);
+  transition:0.2s;
+}
+
+.option:hover {
+  background:rgba(255,255,255,0.15);
+  transform:scale(1.02);
+}
+
+.icon {
+  font-size:28px;
 }
 </style>
 </head>
@@ -69,23 +84,55 @@ button {
 
 <!-- DASHBOARD -->
 <div class="box" id="dashboardBox" style="display:none;">
-  <h2>Panel</h2>
+  <h2>Panel 🎮</h2>
 
   <p id="welcome"></p>
 
-  <button class="green" onclick="createLobby()">Utwórz lobby</button>
-  <button onclick="logout()">Wyloguj</button>
+  <button class="green" onclick="openLobby()">Otwórz lobby</button>
 </div>
 
-<!-- LOBBY -->
-<div class="box" id="lobbyBox" style="display:none;">
-  <h2>🎮 LOBBY</h2>
+<!-- LOBBY MENU (PO KLIKNIĘCIU) -->
+<div class="box" id="lobbyMenu" style="display:none;">
+  <h2>🎮 Wybierz tryb</h2>
 
-  <div class="pin" id="pin"></div>
+  <div class="menu">
 
-  <div id="qr"></div>
+    <div class="option" onclick="openQuizBrowser()">
+      <div class="icon">📚</div>
+      <div>
+        <b>Przeglądaj quizy</b><br>
+        <small>Wybierz kategorię i graj</small>
+      </div>
+    </div>
 
-  <p id="link"></p>
+    <div class="option" onclick="openImpostor()">
+      <div class="icon">🕵️‍♂️</div>
+      <div>
+        <b>Impostor Mode</b><br>
+        <small>Znajdź oszusta wśród graczy</small>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- QUIZ BROWSER -->
+<div class="box" id="quizBox" style="display:none;">
+  <h2>📚 Quizy</h2>
+
+  <p>🎵 Muzyka</p>
+  <p>🎮 Gry</p>
+  <p>🎬 Filmy</p>
+  <p>🧠 Wiedza</p>
+
+  <button onclick="back()">Powrót</button>
+</div>
+
+<!-- IMPOSTOR -->
+<div class="box" id="impostorBox" style="display:none;">
+  <h2>🕵️ IMPOSITOR MODE</h2>
+
+  <p>Jeden gracz jest impostorem!</p>
 
   <button onclick="back()">Powrót</button>
 </div>
@@ -94,94 +141,44 @@ button {
 
 let currentUser = null;
 
-// ===== LOGIN (BEZ AUTO LOGOWANIA) =====
+// ===== LOGIN =====
 function login() {
-  const u = document.getElementById("user").value;
-  const p = document.getElementById("pass").value;
+  const u = user.value;
+  const p = pass.value;
 
-  if (!u || !p) {
-    alert("Uzupełnij dane");
-    return;
-  }
+  if (!u || !p) return alert("Uzupełnij dane");
 
   currentUser = u;
 
-  showDashboard();
-}
-
-// ===== DASHBOARD =====
-function showDashboard() {
   loginBox.style.display = "none";
-  lobbyBox.style.display = "none";
   dashboardBox.style.display = "block";
 
-  document.getElementById("welcome").innerText =
-    "Zalogowany jako: " + currentUser;
+  welcome.innerText = "Zalogowany jako: " + currentUser;
 }
 
-// ===== LOBBY =====
-function createLobby() {
-  const pin = Math.floor(1000 + Math.random()*9000);
-
-  openLobby(pin);
-}
-
-function openLobby(pin) {
+// ===== OPEN LOBBY (NOWY KROK) =====
+function openLobby() {
   dashboardBox.style.display = "none";
-  loginBox.style.display = "none";
-  lobbyBox.style.display = "block";
+  lobbyMenu.style.display = "block";
+}
 
-  document.getElementById("pin").innerText = pin;
+// ===== QUIZ BROWSER =====
+function openQuizBrowser() {
+  lobbyMenu.style.display = "none";
+  quizBox.style.display = "block";
+}
 
-  const url = window.location.href.split("?")[0] + "?join=" + pin;
-
-  document.getElementById("link").innerText = url;
-
-  document.getElementById("qr").innerHTML = "";
-
-  new QRCode(document.getElementById("qr"), {
-    text: url,
-    width: 180,
-    height: 180
-  });
+// ===== IMPOSTOR =====
+function openImpostor() {
+  lobbyMenu.style.display = "none";
+  impostorBox.style.display = "block";
 }
 
 // ===== BACK =====
 function back() {
-  showDashboard();
-}
-
-// ===== LOGOUT =====
-function logout() {
-  currentUser = null;
-  loginBox.style.display = "block";
-  dashboardBox.style.display = "none";
-  lobbyBox.style.display = "none";
-}
-
-// ===== QR JOIN =====
-const params = new URLSearchParams(window.location.search);
-const join = params.get("join");
-
-if (join) {
-  alert("Dołączanie do lobby: " + join);
-
-  loginBox.style.display = "none";
-  dashboardBox.style.display = "none";
-  lobbyBox.style.display = "block";
-
-  document.getElementById("pin").innerText = join;
-
-  document.getElementById("link").innerText =
-    window.location.href;
-
-  document.getElementById("qr").innerHTML = "";
-
-  new QRCode(document.getElementById("qr"), {
-    text: window.location.href,
-    width: 180,
-    height: 180
-  });
+  quizBox.style.display = "none";
+  impostorBox.style.display = "none";
+  lobbyMenu.style.display = "block";
 }
 
 </script>

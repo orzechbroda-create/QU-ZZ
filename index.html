@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+
+              <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quizizz - Stylowy Quiz</title>
+    <title>QU!ZZ - Stylowy Quiz</title>
     <style>
         :root {
             --primary: #6c3ce0;
@@ -206,16 +207,17 @@
         .join-screen .subtitle {
             color: var(--text-light);
             font-size: 1.1em;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
         .join-code-box {
             background: linear-gradient(135deg, #f5f0ff, #ede0ff);
             border: 3px dashed var(--primary);
             border-radius: 20px;
-            padding: 25px 20px;
-            margin: 20px 0;
+            padding: 20px 20px;
+            margin: 10px auto;
             display: inline-block;
             min-width: 200px;
+            text-align: center;
         }
         .join-code {
             font-size: 3.5em;
@@ -223,6 +225,25 @@
             letter-spacing: 8px;
             color: var(--primary-dark);
             font-family: 'Courier New', monospace;
+        }
+        .qr-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .qr-container {
+            background: white;
+            padding: 12px;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            line-height: 0;
+        }
+        .qr-container canvas {
+            border-radius: 8px;
         }
         .players-count {
             margin-top: 15px;
@@ -424,6 +445,10 @@
             }
             .question-text {
                 font-size: 1.2em;
+            }
+            .qr-section {
+                flex-direction: column;
+                gap: 15px;
             }
         }
         .option-btn {
@@ -629,11 +654,17 @@
     <div class="container" id="app">
         <!-- Ekran dołączania -->
         <div class="card join-screen" id="joinScreen">
-            <div class="logo">Quiz<span>izz</span></div>
+            <div class="logo">QU<span>!ZZ</span></div>
             <p class="subtitle">Dołącz do quizu i sprawdź swoją wiedzę!</p>
-            <div class="join-code-box">
-                <div style="font-size:0.85em;color:var(--text-light);margin-bottom:5px;">KOD QUIZU</div>
-                <div class="join-code" id="joinCode">482917</div>
+            <div class="qr-section">
+                <div class="join-code-box">
+                    <div style="font-size:0.85em;color:var(--text-light);margin-bottom:5px;">KOD QUIZU</div>
+                    <div class="join-code" id="joinCode">482917</div>
+                    <div style="font-size:0.8em;color:var(--text-light);margin-top:8px;">lub zeskanuj QR</div>
+                </div>
+                <div class="qr-container" id="qrContainer">
+                    <!-- Tutaj zostanie wygenerowany kod QR -->
+                </div>
             </div>
             <div class="players-count">
                 <span class="dot"></span> Oczekujący gracze: <strong id="playerCount">1</strong>
@@ -702,6 +733,9 @@
             </button>
         </div>
     </div>
+
+    <!-- Biblioteka do generowania QR Code -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
     <script>
         // ==================== DANE QUIZU ====================
@@ -780,12 +814,33 @@
         };
 
         // Lista botów do rankingu
-        const botNames = ['Mistrz_Quizu', 'SowaMądra', 'Błyskawica', 'ProfesorX', 'Einstein99', 'SuperBrain', 'QuizMaster'];
+        const botNames = ['Mistrz_Quizu', 'SowaMądra', 'Błyskawica', 'ProfesorX', 'Einstein99', 'SuperBrain',
+        'QuizMaster'];
         let leaderboard = [];
+        let qrCodeInstance = null;
 
         // ==================== FUNKCJE ====================
         function generateJoinCode() {
             return String(Math.floor(100000 + Math.random() * 900000));
+        }
+
+        function generateQRCode(code) {
+            const container = document.getElementById('qrContainer');
+            container.innerHTML = ''; // Wyczyść poprzedni QR
+            if (typeof QRCode === 'undefined') {
+                container.innerHTML = '<p style="color:red;">Biblioteka QR nie załadowana</p>';
+                return;
+            }
+            // Tworzymy link do dołączenia (symulowany)
+            const joinUrl = https://quizizz.com/join?code=${code};
+            qrCodeInstance = new QRCode(container, {
+                text: joinUrl,
+                width: 110,
+                height: 110,
+                colorDark: "#2d1b69",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
         }
 
         function updatePlayerCount() {
@@ -831,7 +886,9 @@
             document.getElementById('resultScreen').classList.add('hidden');
             document.getElementById('joinScreen').classList.remove('hidden');
             document.getElementById('quizScreen').classList.add('hidden');
-            document.getElementById('joinCode').textContent = generateJoinCode();
+            const newCode = generateJoinCode();
+            document.getElementById('joinCode').textContent = newCode;
+            generateQRCode(newCode);
             updatePlayerCount();
             clearInterval(state.timerInterval);
             state.timerInterval = null;
@@ -1155,8 +1212,11 @@
         }
 
         // ==================== INICJALIZACJA ====================
-        document.getElementById('joinCode').textContent = generateJoinCode();
+        const initialCode = generateJoinCode();
+        document.getElementById('joinCode').textContent = initialCode;
         updatePlayerCount();
+        // Generuj początkowy QR
+        generateQRCode(initialCode);
 
         // Odśwież licznik graczy co jakiś czas na ekranie dołączania
         setInterval(() => {
@@ -1165,10 +1225,10 @@
             }
         }, 8000);
 
-        console.log('🎯 Quizizz-style Quiz gotowy!');
+        console.log('🎯 QU!ZZ Quiz gotowy!');
         console.log('   Kliknij "Rozpocznij Quiz" aby zagrać.');
         console.log('   Power-upy: 50/50, x2 punkty, +5 sekund');
-        console.log('   Miłej zabawy! 🚀');
+        console.log('   Kod QR dostępny na ekranie dołączania.');
     </script>
 </body>
 </html>
